@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import User
 from .serializers import UserSerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 
 
 
@@ -11,7 +11,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 def user_create(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.data['is_admin'] = False
+        if(User.objects.filter(email=request.data['email']).exists()):
+            return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        if('is_admin' in request.data and request.data['is_admin'] == True):
+            return Response({'error': 'Cannot create admin user'}, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
