@@ -9,9 +9,13 @@ class User(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        if self.password:
+        if self.password and not self.password.startswith('pbkdf2_sha256$'):
             self.password = make_password(self.password)
         super(User, self).save(*args, **kwargs)
+
+    
+    class Meta:
+        unique_together = ('username', 'email')
 
     def __str__(self):
         return self.email
