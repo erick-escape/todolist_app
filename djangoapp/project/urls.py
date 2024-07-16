@@ -20,6 +20,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
+    path('attachment/', include('attachment.urls')),
     path('task/', include('task.urls')),
     path('auth/', include('authentication.urls')),
     path('user/', include('user.urls')),
