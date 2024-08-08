@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def task_create(request):
-    serializer = TaskSerializer(data=request.data)
+    serializer = TaskSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -40,7 +40,7 @@ def task_detail(request, pk):
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = TaskSerializer(task, data=request.data)
+        serializer = TaskSerializer(task, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
