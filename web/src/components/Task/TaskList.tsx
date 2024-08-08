@@ -3,9 +3,50 @@ import { Button } from "../ui/button";
 import { TaskItem } from "../ui/TaskItem";
 import { IconArrowLeft, IconPlus } from "@tabler/icons-react"; // Certifique-se de ter os ícones instalados
 import userAvatar from "../../assets/react.svg"; // Substitua pelo caminho do avatar do usuário
+import { useEffect, useState } from "react";
+
+type Task = {
+  id: number;
+  title: string;
+  description: string;
+};
 
 const TaskList = () => {
   const navigate = useNavigate();
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        console.error("No token found, redirecting to login");
+        navigate("/login"); // Redirecionar para o login se não houver token
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:8000/task/", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setTasks(data);
+        } else {
+          console.error("Failed to fetch tasks");
+        }
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchTasks();
+  }, [navigate]);
 
   const handleEdit = (taskId: number) => {
     // Lógica para editar a tarefa
@@ -31,12 +72,6 @@ const TaskList = () => {
     // Navegar para a página de detalhes do usuário
     navigate("/user-details");
   };
-
-  const tasks = [
-    { id: 1, title: "Tarefa 1", description: "Descrição da tarefa 1" },
-    { id: 2, title: "Tarefa 2", description: "Descrição da tarefa 2" }
-    // Adicione mais tarefas conforme necessário
-  ];
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
