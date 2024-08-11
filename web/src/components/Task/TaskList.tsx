@@ -10,6 +10,7 @@ const TaskList = () => {
   const handleEdit = (taskId: number) => {
     // Lógica para editar a tarefa
     console.log(`Edit task with ID: ${taskId}`);
+    navigate(`/task-details/${taskId}`);
   };
 
   const handleDelete = (taskId: number) => {
