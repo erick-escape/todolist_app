@@ -20,6 +20,7 @@ const TaskList = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -89,8 +90,37 @@ const TaskList = () => {
     navigate(`/task-details/${taskId}`);
   };
 
-  const handleDelete = (taskId: number) => {
+  const handleDelete = async (taskId: number) => {
     console.log(`Delete task with ID: ${taskId}`);
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      console.error("No token found, redirecting to login");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8000/task/${taskId}/`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        toast.success("Task deleted successfully");
+        await sleep(1500);
+        window.location.reload();
+        return;
+      } else {
+        //throw new exception("Failed to delete task")
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task" + error);
+    }
   };
 
   const handleAttach = async (taskId: number) => {
