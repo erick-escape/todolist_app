@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { TaskItem } from "../ui/TaskItem";
 import { IconArrowLeft, IconPlus } from "@tabler/icons-react";
 import userAvatar from "../../assets/react.svg";
+import { toast } from "react-toastify";
 
 type Task = {
   id: number;
@@ -120,6 +121,7 @@ const TaskList = () => {
           window.open(attachmentUrl, "_blank");
         } else {
           console.log("No attachments found for this task.");
+          toast.info("No attachments found for this task.");
         }
       } else {
         console.error("Failed to fetch attachments");
