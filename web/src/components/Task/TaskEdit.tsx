@@ -1,40 +1,109 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../ui/button";
 import { IconArrowLeft } from "@tabler/icons-react";
+import { toast } from "react-toastify";
+
+type Task = {
+  id: number;
+  title: string;
+  description: string;
+};
 
 const EditTask = () => {
-  const { taskId } = useParams(); // Getting taskId from the URL params
+  const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
-
-  // Example initial state, this might come from an API or context
-  const [task, setTask] = useState({ title: "", description: "" });
+  const [task, setTask] = useState<Task | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch the task data by taskId (this could be an API call)
-    // Assuming a function fetchTaskById is defined elsewhere
-    const fetchedTask = {
-      id: taskId,
-      title: `Tarefa ${taskId}`,
-      description: `Descrição da tarefa ${taskId}`,
-    };
-    setTask(fetchedTask);
-  }, [taskId]);
+    const fetchTask = async () => {
+      const token = localStorage.getItem("access_token");
 
-  const handleInputChange = (e: { target: { name: string; value: string; }; }) => {
+      if (!token) {
+        console.error("No token found, redirecting to login");
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8000/task/${taskId}/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setTask(data);
+        } else {
+          console.error("Failed to fetch task");
+          setError("Failed to fetch task");
+        }
+      } catch (error) {
+        console.error("Error fetching task:", error);
+        setError("Error fetching task");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTask();
+  }, [taskId, navigate]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setTask({ ...task, [name]: value });
+    setTask((prevTask) => prevTask ? { ...prevTask, [name]: value } : null);
   };
 
-  const handleSave = () => {
-    // Logic to save the edited task
-    console.log("Saved task:", task);
-    navigate("/tasks"); // Navigate back to the task list after saving
+  const handleSave = async () => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      console.error("No token found, redirecting to login");
+      navigate("/login");
+      return;
+    }
+
+    if (task) {
+      try {
+        const response = await fetch(`http://localhost:8000/task/${taskId}/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(task),
+        });
+
+        if (response.ok) {
+          toast.success("Task updated successfully");
+          navigate("/tasks");
+        } else {
+          console.error("Failed to update task");
+          setError("Failed to update task");
+        }
+      } catch (error) {
+        console.error("Error updating task:", error);
+        setError("Error updating task");
+      }
+    }
   };
 
   const handleCancel = () => {
-    navigate("/tasks"); // Navigate back to the task list without saving
+    navigate("/tasks");
   };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-900 text-white p-4">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="min-h-screen bg-gray-900 text-white p-4">{error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
@@ -59,7 +128,7 @@ const EditTask = () => {
               type="text"
               name="title"
               id="title"
-              value={task.title}
+              value={task?.title || ""}
               onChange={handleInputChange}
               className="w-full p-2 bg-gray-700 rounded"
             />
@@ -71,7 +140,7 @@ const EditTask = () => {
             <textarea
               name="description"
               id="description"
-              value={task.description}
+              value={task?.description || ""}
               onChange={handleInputChange}
               className="w-full p-2 bg-gray-700 rounded"
             ></textarea>
