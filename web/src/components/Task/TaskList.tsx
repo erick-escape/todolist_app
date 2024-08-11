@@ -1,43 +1,142 @@
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { TaskItem } from "../ui/TaskItem";
-import { IconArrowLeft, IconPlus } from "@tabler/icons-react"; // Certifique-se de ter os ícones instalados
-import userAvatar from "../../assets/react.svg"; // Substitua pelo caminho do avatar do usuário
+import { IconArrowLeft, IconPlus } from "@tabler/icons-react";
+import userAvatar from "../../assets/react.svg";
+
+type Task = {
+  id: number;
+  title: string;
+  description: string;
+};
+
+type User = {
+  username: string;
+};
 
 const TaskList = () => {
   const navigate = useNavigate();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        console.error("No token found, redirecting to login");
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:8000/task/", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setTasks(data);
+        } else {
+          console.error("Failed to fetch tasks");
+        }
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    const fetchUser = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        console.error("No token found, redirecting to login");
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:8000/user/me/", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          console.error("Failed to fetch user");
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchTasks();
+    fetchUser();
+  }, [navigate]);
 
   const handleEdit = (taskId: number) => {
-    // Lógica para editar a tarefa
     console.log(`Edit task with ID: ${taskId}`);
     navigate(`/task-details/${taskId}`);
   };
 
   const handleDelete = (taskId: number) => {
-    // Lógica para excluir a tarefa
     console.log(`Delete task with ID: ${taskId}`);
   };
 
-  const handleAttach = (taskId: number) => {
-    // Lógica para anexar arquivos à tarefa
-    console.log(`Attach files to task with ID: ${taskId}`);
+  const handleAttach = async (taskId: number) => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      console.error("No token found, redirecting to login");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/attachment/?task_id=${taskId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.ok) {
+        const attachments = await response.json();
+        if (attachments.length > 0) {
+          const attachmentUrl = `http://localhost:8000${attachments[0].file}`;
+          window.open(attachmentUrl, "_blank");
+        } else {
+          console.log("No attachments found for this task.");
+        }
+      } else {
+        console.error("Failed to fetch attachments");
+      }
+    } catch (error) {
+      console.error("Error fetching attachments:", error);
+    }
   };
 
-  const handleAddTask = () => {
-    // Lógica para adicionar uma nova tarefa
-    console.log("Add new task");
+  const handleAddTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate("/add-task");
   };
 
   const handleUserDetails = () => {
-    // Navegar para a página de detalhes do usuário
     navigate("/user-details");
   };
-
-  const tasks = [
-    { id: 1, title: "Tarefa 1", description: "Descrição da tarefa 1" },
-    { id: 2, title: "Tarefa 2", description: "Descrição da tarefa 2" }
-    // Adicione mais tarefas conforme necessário
-  ];
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -67,7 +166,7 @@ const TaskList = () => {
               alt="User Avatar"
               className="h-8 w-8 rounded-full mr-2"
             />
-            <span>Nome do Usuário</span>
+            <span>{user?.username || "Loading..."}</span>
           </div>
         </div>
       </nav>
@@ -77,6 +176,7 @@ const TaskList = () => {
           {tasks.map(task => (
             <TaskItem
               key={task.id}
+              id={task.id}
               title={task.title}
               description={task.description}
               onEdit={() => handleEdit(task.id)}

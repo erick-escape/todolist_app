@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 def attachment_create(request):
     serializer = AttachmentSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(user=request.user)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -19,7 +19,12 @@ def attachment_create(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def attachment_list(request):
-    attachments = Attachment.objects.filter(user=request.user)
+    task_id = request.query_params.get('task_id')
+    if not task_id:
+        return Response({"detail": "task_id query parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Filtrar com o campo task_id em vez de task
+    attachments = Attachment.objects.filter(task_id=task_id)
     serializer = AttachmentSerializer(attachments, many=True)
     return Response(serializer.data)
 

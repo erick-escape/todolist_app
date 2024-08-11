@@ -1,16 +1,18 @@
 import React from "react";
 import { Button } from "../ui/button";
-import { IconEdit, IconTrash, IconPaperclip } from "@tabler/icons-react"; // Certifique-se de ter os ícones instalados
+import { IconEdit, IconTrash, IconPaperclip } from "@tabler/icons-react";
 
 interface TaskItemProps {
+  id: number; // Adicione id para identificar a tarefa
   title: string;
   description: string;
   onEdit: () => void;
   onDelete: () => void;
-  onAttach: () => void;
+  onAttach: (taskId: number) => void; // Atualize a função para receber taskId
 }
 
 export const TaskItem: React.FC<TaskItemProps> = ({
+  id,
   title,
   description,
   onEdit,
@@ -44,7 +46,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             Excluir
           </Button>
           <Button
-            onClick={onAttach}
+            onClick={() => onAttach(id)} // Passe o id para a função onAttach
             variant="default"
             size="sm"
             className="flex items-center"
