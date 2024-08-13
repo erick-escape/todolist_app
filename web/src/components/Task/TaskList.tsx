@@ -10,6 +10,7 @@ type Task = {
   id: number;
   title: string;
   description: string;
+  done: boolean;
 };
 
 type User = {
@@ -84,6 +85,66 @@ const TaskList = () => {
     fetchTasks();
     fetchUser();
   }, [navigate]);
+
+  const handleToggleComplete = async (taskId: number, done: boolean) => {
+    // Logic to update the task's completion status in the backend
+    console.log(`Task ID: ${taskId}, Completed: ${done}`);
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      console.error("No token found, redirecting to login");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8000/task/${taskId}/`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const task = await response.json();
+        if (task) {
+          task.done = !task.done;
+          const response = await fetch(`http://localhost:8000/task/${taskId}/`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(task),
+          });
+
+          if (response.ok) {
+            toast.success("Tarefa atualizada com sucesso!");
+            setTasks(prevTasks =>
+              prevTasks.map(task =>
+                task.id === taskId ? { ...task, done } : task
+              )
+            );
+          } else {
+            console.error("Failed to update task");
+            toast.error("Erro ao atualizar tarefa");
+          }
+        } else {
+          console.log("No task found for this task.");
+          toast.error("Erro ao buscar tarefa");
+        }
+      } else {
+        console.error("Failed to fetch task");
+        toast.error("Erro ao buscar tarefa");
+      }
+    } catch (error) {
+      console.error("Error fetching task:", error);
+      toast.error("Erro ao buscar tarefa" + error);
+    }
+    // Update the local state after successful backend update (pseudo-code)
+
+  };
 
   const handleEdit = (taskId: number) => {
     console.log(`Edit task with ID: ${taskId}`);
@@ -211,9 +272,11 @@ const TaskList = () => {
               id={task.id}
               title={task.title}
               description={task.description}
+              done={task.done}
               onEdit={() => handleEdit(task.id)}
               onDelete={() => handleDelete(task.id)}
               onAttach={() => handleAttach(task.id)}
+              onToggleComplete={handleToggleComplete}
             />
           ))}
         </div>
