@@ -36,6 +36,11 @@ const Register = () => {
     }
   };
 
+  const handleBack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate("/");
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-900">
       <div className="bg-gray-800 p-10 rounded-lg shadow-lg w-96">
@@ -95,7 +100,7 @@ const Register = () => {
         <div className="text-gray-400 mt-4 text-center">
           Already have an account?{" "}
           <a
-            href="/"
+            onClick={handleBack}
             className="text-indigo-500 hover:text-indigo-400 underline"
           >
             Log in
