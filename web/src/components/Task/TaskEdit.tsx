@@ -32,8 +32,8 @@ const EditTask = () => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+            Authorization: `Bearer ${token}`
+          }
         });
 
         if (response.ok) {
@@ -54,12 +54,15 @@ const EditTask = () => {
     fetchTask();
   }, [taskId, navigate]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setTask((prevTask) => prevTask ? { ...prevTask, [name]: value } : null);
+    setTask(prevTask => (prevTask ? { ...prevTask, [name]: value } : null));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
     const token = localStorage.getItem("access_token");
 
     if (!token) {
@@ -74,9 +77,9 @@ const EditTask = () => {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify(task),
+          body: JSON.stringify(task)
         });
 
         if (response.ok) {
@@ -98,11 +101,15 @@ const EditTask = () => {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-900 text-white p-4">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-4">Loading...</div>
+    );
   }
 
   if (error) {
-    return <div className="min-h-screen bg-gray-900 text-white p-4">{error}</div>;
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-4">{error}</div>
+    );
   }
 
   return (
@@ -134,7 +141,10 @@ const EditTask = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-bold mb-2" htmlFor="description">
+            <label
+              className="block text-sm font-bold mb-2"
+              htmlFor="description"
+            >
               Descrição
             </label>
             <textarea
